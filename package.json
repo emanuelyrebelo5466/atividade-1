@@ -1,0 +1,9 @@
+{
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "5",
+    "@types/bun": "latest"
+  },
+  "name": "atividade3",
+  "private": true
+}
