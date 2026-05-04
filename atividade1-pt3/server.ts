@@ -6,7 +6,7 @@ const todo = new ToDo(filepath);
 const port = 3000;
 
 type ReponseData = {
-    description: string
+  description: string
 }
 
 const server = Bun.serve({
@@ -16,7 +16,7 @@ const server = Bun.serve({
     const method = request.method;
     const pathname = url.pathname;
     const searchParams = url.searchParams;
-
+    
     // GET /items - listar todos os itens
     if (pathname === "/items" && method === "GET") {
       const items = await todo.getItems();
@@ -25,7 +25,7 @@ const server = Bun.serve({
         headers: { "Content-Type": "application/json" }
       });
     }
-
+    
     // POST /items - adicionar novo item
     if (pathname === "/items" && method === "POST") {
       try {
@@ -38,7 +38,7 @@ const server = Bun.serve({
             headers: { "Content-Type": "application/json" }
           });
         }
-
+        
         const item = new Item(description);
         await todo.addItem(item);
         
@@ -53,7 +53,7 @@ const server = Bun.serve({
         });
       }
     }
-
+    
     // PUT /items?index=0 - atualizar item
     if (pathname === "/items" && method === "PUT") {
       try {
@@ -65,20 +65,20 @@ const server = Bun.serve({
             headers: { "Content-Type": "application/json" }
           });
         }
-
+        
         const body = await request.json() as ReponseData;;
         const { description } = body;
-
+        
         if (!description) {
           return new Response(JSON.stringify({ error: "Description is required" }), {
             status: 400,
             headers: { "Content-Type": "application/json" }
           });
         }
-
+        
         const item = new Item(description);
         await todo.updateItem(index, item);
-
+        
         return new Response(JSON.stringify({ message: "Item updated successfully", item: item.toJSON() }), {
           status: 200,
           headers: { "Content-Type": "application/json" }
@@ -90,7 +90,7 @@ const server = Bun.serve({
         });
       }
     }
-
+    
     // DELETE /items?index=0 - remover item
     if (pathname === "/items" && method === "DELETE") {
       try {
@@ -102,7 +102,7 @@ const server = Bun.serve({
             headers: { "Content-Type": "application/json" }
           });
         }
-
+        
         await todo.removeItem(index);
         
         return new Response(JSON.stringify({ message: "Item removed successfully" }), {
@@ -116,7 +116,38 @@ const server = Bun.serve({
         });
       }
     }
-
+    
+    // GET /contatos/buscar?nome=...
+    if (pathname === "/contatos/buscar" && method === "GET") {
+      return (async () => {
+        try {
+          const nome = searchParams.get("nome")?.toLowerCase();
+          
+          if (!nome) {
+            return new Response(JSON.stringify({ error: "O parâmetro 'nome' é obrigatório" }), {
+              status: 400,
+              headers: { "Content-Type": "application/json" }
+            });
+          }
+          
+          const items = await todo.getItems(); // await funciona aqui
+          const resultados = items
+          .map(item => item.toJSON())
+          .filter(item => item.description.toLowerCase().includes(nome));
+          
+          return new Response(JSON.stringify(resultados), {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
+          });
+        } catch (error) {
+          return new Response(JSON.stringify({ error: "Falha ao buscar contatos" }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" }
+          });
+        }
+      })(); // executa a async IIFE imediatamente
+    }
+    
     return new Response(JSON.stringify({ error: "Not found" }), {
       status: 404,
       headers: { "Content-Type": "application/json" }
